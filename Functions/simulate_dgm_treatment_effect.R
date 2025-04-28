@@ -1,0 +1,110 @@
+library(pracma) # contains gaussLegendre
+library(rstpm2) # contains vuniroot
+library(survextrap)
+library(flexsurv)
+library(tidyverse)
+library(emg)
+library(survminer)
+library(bshazard)
+
+
+sim_dgm_trt <- function(gamma = NULL, 
+                   knots = NULL,
+                   hr_scenario = NULL,
+                   beta = NULL,
+                   N,
+                   nsim, 
+                   maxT,
+                   seed,
+                   lower = 1e-08, 
+                   upper = 10000, 
+                   nodes=100){
+  
+  if(hr_scenario == 1) {
+    
+    haz <- function(t, gamma, knots, beta, trt) {
+      t <- as.matrix(t)
+      trow <- nrow(t)
+      loghaz <- log(hsurvspline(x = t, gamma = gamma, knots = knots))+beta[1]*trt
+      loghaz <- matrix(loghaz, nrow = trow)
+      return(exp(loghaz))
+    }
+    
+  } else if(hr_scenario == 2) {
+    
+    haz <- function(t, gamma, knots, beta, trt) {
+      t <- as.matrix(t)
+      trow <- nrow(t)
+      loghaz <- log(hsurvspline(x = t, gamma = gamma, knots = knots))+
+        beta[1]*(1-tanh(x = (beta[2]*t+beta[3])))*trt
+      loghaz <- matrix(loghaz, nrow = trow)
+      return(exp(loghaz))
+    } 
+    
+  } else if(hr_scenario == 3) {
+    
+    haz <- function(t, gamma, knots, beta, trt) {
+      t <- as.matrix(t)
+      trow <- nrow(t)
+      loghaz <- log(hsurvspline(x = t, gamma = gamma, knots = knots))+
+        (beta[1]+beta[2]*demg(x = t, mu = beta[3], sigma = beta[4], lambda = beta[5]))*trt
+      loghaz <- matrix(loghaz, nrow = trow)
+      return(exp(loghaz))
+    }  
+    
+  }
+  
+  
+  ## Cumulative hazard function using Guassian quadrature.
+  
+  f1 <- function(t,lnU,nodes,gamma, knots, beta, trt) {
+    ch <- vecquad_gl(haz,0,t,nodes, gamma, knots, beta, trt)
+    return(-ch-lnU)
+  }
+  
+  vecquad_gl <- function(fn,a,b,nodes,...) {
+    nw  <- gaussLegendre(n = nodes,-1,1)
+    z1 <- fn(t = 0.5*as.matrix(b-a)%*%t(nw$x)+as.vector(0.5*(a+b)),...)
+    
+    return((0.5*(b-a))*rowSums(sweep(z1,2, nw$w,"*")))
+  }  
+  
+  
+  set.seed(seed)
+  
+ # N <- 400
+ # maxT <- 5
+ # nsim <- 10
+ # lower <- 10^(-8)
+ # upper <- 1e5
+ 
+  sim_data <- expand_grid(id=1:floor(N/2),
+                          censtime = maxT,
+                          i=1:nsim,
+                          trt = c(0,1)) %>%
+    mutate(time = 0,
+           event = 0)
+  
+  root_interval <- cbind(rep(lower,nrow(sim_data)),rep(upper,nrow(sim_data)))
+  lnU  <- log(runif(nrow(sim_data)))
+  
+  t <- vuniroot(f1,interval=root_interval, lnU=lnU, nodes=nodes, 
+                gamma = gamma, knots = knots,  beta = beta, trt = sim_data[["trt"]])$root
+  
+  
+  if(is.null(maxT)) maxT <- Inf
+  
+  sim_data <- sim_data %>%
+    mutate(time = pmin(t, censtime),
+           event = as.numeric(t<censtime))
+  
+  return(sim_data)
+  
+}
+
+
+
+
+
+
+
