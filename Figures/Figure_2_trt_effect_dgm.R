@@ -1,4 +1,3 @@
-###############
 
 #############################################################
 # Plot data-generating mechanism survival/hazard functions.
@@ -26,18 +25,13 @@ library(formattable)
 library(data.table)
 library(emg)
 
-######################################
-
+# Folder where figures will be stored.
+store_directory <- "/directory/to/store/results"
 
 source("R/functions_treatment_effect.R")
 
-
-
-store_directory <- paste0("/projects/aa/statistical_innovation/itimmins/simsurvextrap/aim1_simulations/slurm/")
-
-
-# Extract Bonner trial Cetuximab arm.
-surv_df <- cetux[cetux$treat=="Cetuximab",]
+# Import Bonner trial Cetuximab arm.
+surv_df <- readRDS("Data/cetuximab_OS.rds")
 # End of trial follow-up time for rmst computation
 maxT_data <- max(surv_df$years)
 k_true <-  3
@@ -52,13 +46,9 @@ for(scenario_num in 1:3){
 jobname <- "trt5_rw" 
 big_df <-  readRDS(paste0(store_directory , "simsurvextrap_slurm_", jobname, "/", "dgm", scenario_num , "/sim_data_big.rds"))
 
-#km_fit <- survfit(Surv(time, event) ~ trt, data=big_df %>% slice(1:10000))
 km_fit <- survfit(Surv(time, event) ~ trt, data=big_df %>% slice(1:1000000))
-#plot(km_fit)
 
 km_plot <- ggsurvplot(km_fit, data=big_df %>% slice(1:1000000))
-#km_plot <- ggsurvplot(km_fit, data=big_df %>% slice(1:1000))
-
 
 surv_df <- km_plot$data.survplot %>%
   mutate(trt = factor(trt, labels = c("Control", "Active"))) %>%
@@ -89,7 +79,6 @@ beta1 <- log(0.7)
 beta2 <- c(log(0.5)/(1-tanh(-1.2)), 0.8, -1.2)
 beta3 <- c(0, -2.8, 0.8, 0.4, 0.35)
 
-
 hr <- scenario_hr(scenario_num)
 haz <- scenario_haz(scenario_num)
 beta_true <- get(paste0("beta", scenario_num))
@@ -100,13 +89,12 @@ hr_df <- tibble(time = seq(from = 0, to = 5, length.out = 1e4)) %>%
                  knots = true_mod$knots, 
                  beta =  beta_true) )
 
-
 plot_hr <- hr_df %>%
-ggplot(aes(x = time, y = hr))+
-theme_classic()+
-theme(plot.margin = unit(c(0, 0.2, 0, 0.15), "cm"),
-      axis.text=element_text(size=7),
-      axis.title=element_text(size=9))+
+  ggplot(aes(x = time, y = hr))+
+  theme_classic()+
+  theme(plot.margin = unit(c(0, 0.2, 0, 0.15), "cm"),
+        axis.text=element_text(size=7),
+        axis.title=element_text(size=9))+
   geom_line(col = "#830051")+
   ylab("Hazard ratio")+
   scale_y_continuous(lim = c(0.36,1.14), breaks = seq(from = 0.25, to = 1.25, by = 0.25))+
@@ -151,18 +139,4 @@ tiff(file = paste0(store_directory, "figures/figure_dgm_two_arm.tiff"),
      compression = "lzw")
 plot_all
 dev.off()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
