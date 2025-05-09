@@ -1,4 +1,3 @@
-###########
 library(here)
 library(tidyr)
 library(dplyr)
@@ -23,10 +22,9 @@ library(data.table)
 user <- Sys.info()["user"]
 store_directory <- paste0("/projects/aa/statistical_innovation/itimmins/simsurvextrap/aim1_simulations/slurm/")
 
-source("R/fit_model.R")
-source("R/estimands.R")
-source("R/visualise.R")
-source("R/performance.R")
+source("Functions/estimands.R")
+source("Functions/visualise.R")
+source("Functions/performance.R")
 
 ##########################################
 # Plot RMST at 5-y performance measures
@@ -39,13 +37,10 @@ niv_jobname <- "niv8"
 est_id_choose <- "rmst1"
 
 for(jobname in c(cetux_jobname, niv_jobname)){
-  #jobname <- "cetux16"
-  #jobname <- "master_niv3" 
-  
+
   setwd(paste0(store_directory , "simsurvextrap_slurm_", jobname, "/"))
   print(getwd())
-  #dir.create("plots")
-  
+
   scenarios <- read_csv(paste0("scenarios_", jobname ,".csv"))
   nscen <- nrow(scenarios)
   

@@ -24,14 +24,8 @@ library(emg)
 # specify jobname and path where results are to be stored.
 #############################################################
 
-# set to project root.
-# setwd("/home/klvq491/Documents/simulation_survextrap/simsurvextrap/")
-
-jobname <- "trt8_time" 
-user <- Sys.info()["user"]
-scratch_directory <- paste0("/wscratch/", user, "/")
-
-store_res <- paste0(scratch_directory, "simsurvextrap_slurm_", jobname, "/") 
+jobname <- "trt" 
+store_res <- "directory/to/store/simulations"
 
 store_sjob <- paste0(store_res, "sjob_", jobname, ".rds") 
 store_sjob_res <- paste0(store_res, "res_sjob_", jobname, ".csv") 
@@ -40,44 +34,38 @@ store_scenarios_nsim <- paste0(store_res,"scenarios_nsim_", jobname, ".csv")
 store_parameters <- paste0(store_res,"parameters_", jobname, ".csv")
 store_plot_res <- paste0(store_res,"plots/","plot_res_", jobname, ".rds") 
 
-
 #############################################################
 # import trial data and call scripts to create functions.
 #############################################################
 
-source("R/simulate_dgm_treatment_effect.R")
-source("R/simulate_dgm.R")
-source("R/functions_treatment_effect.R")
-source("R/fit_model.R")
-source("R/estimands.R")
-source("R/visualise.R")
-source("R/performance.R")
+source("Functions/simulate_dgm.R")
+source("Functions/functions_treatment_effect.R")
+source("Functions/estimands.R")
 
 if(!dir.exists(store_res)){
   dir.create(store_res)
 }
-setwd(store_res)
 
+setwd(store_res)
 
 # create log.
 if(!dir.exists("log")){
   dir.create("log")
 }  
 
-#savehistory(file = paste0(store_res, "/log/", jobname, "_output.txt"))
-
 #########################################################
 # DGM: import trial data
 #########################################################
 
 # from cetux control arm
+cetux <- readRDS("Data/cetuximab_OS.rds") 
 surv_df <- cetux[cetux$treat=="Cetuximab",]
 
 # end of trial follow-up time for rmst computation
-
 maxT_data <- max(surv_df$years)
-
+# specify number of knots for spline model
 k_true <-  3
+# derive true model using flexsurv
 true_mod <- flexsurv::flexsurvspline(Surv(years, d) ~ 1, data=surv_df, k=k_true)
 
 #######################################################
@@ -86,7 +74,7 @@ true_mod <- flexsurv::flexsurvspline(Surv(years, d) ~ 1, data=surv_df, k=k_true)
 
 # write scenarios as tibble
 
-nsim <- 50 # simulation replicates
+nsim <- 1000 # simulation replicates
 
 set.seed(378271147)
 
@@ -140,13 +128,8 @@ scenarios <- expand_grid(dgm_mod = "true_mod",
          label_hrsd = fct_inorder(label_hrsd),
          label_method = fct_inorder(label_method))
 
-View(scenarios)
-#summary(as.factor(scenarios$label_hrsd))
-#View(scenarios)
-#scenarios <- read_csv("/wscratch/klvq491/simsurvextrap_slurm_cetux_trt1_opt/scenarios_cetux_trt1_opt.csv")
-#scenarios$N <- 400
 write_csv(scenarios, file = store_scenarios)
-#View(scenarios)
+
 nscen <- nrow(scenarios)
 
 for(i in 1:nscen){
@@ -206,12 +189,9 @@ for(i in 1:nrow(scenarios_dgm)){
   }  
 }
 
-# memoise the sim_dgm_trt function so that we don't need to re-simulate data if it is already simulated under the same conditions
-sim_dgm_trt_memoise <- memoise::memoise(sim_dgm_trt, cache = cachem::cache_disk(dir = paste0(store_res, ".cache")))
-
 gen_dgm <- function(hr_function, i, N, maxT = 100, save_file, return_model=FALSE, seed ){
   
-  res <- sim_dgm_trt_memoise(gamma = true_mod$coefficients,
+  res <- sim_dgm_trt(gamma = true_mod$coefficients,
                              knots = true_mod$knots,
                              hr_scenario = hr_function,
                              beta = get(paste0("beta", hr_function)),
@@ -220,6 +200,7 @@ gen_dgm <- function(hr_function, i, N, maxT = 100, save_file, return_model=FALSE
                              maxT = maxT,
                              seed = seed,
                              nodes = 50) 
+  
   res$i <- i # label nsim iteration number
   if(!is.null(save_file)) saveRDS(res, file = save_file)
   if(return_model == TRUE)  res
@@ -236,11 +217,9 @@ pars_dgm <- expand_grid(hr_function = 1:3,
   mutate(seed = sample(10^6:10^8, n(), replace= FALSE)) %>%
   slice(sample(1:n())) 
 
-
 #################################################################
 ## Generate data from each dgm using slurm script.
 #################################################################
-
 
 sjob_dgm <- slurm_apply(gen_dgm, 
                         pars_dgm, 
@@ -250,7 +229,7 @@ sjob_dgm <- slurm_apply(gen_dgm,
                         submit = TRUE,
                         global_objects = c("true_mod",
                                            paste0("beta",1:3),
-                                           "sim_dgm_trt_memoise"),
+                                           "sim_dgm_trt"),
                         pkgs = c("dplyr", "tidyr", "ggplot2", "readr",
                                  "flexsurv", "survextrap", "rstan", "emg",
                                  "pracma","rstpm2" ),
@@ -296,19 +275,6 @@ for(i in 1:nrow(scenarios_dgm)){
  
 }
 
-#summary(sim_data1$i)
-#summary(as.factor(sim_data1$id))
-#summary(as.factor(sim_data1$i))
-#max(sim_data1$i)
-
-#test <- sim_data1 %>%
-# filter(i == 10)
-#nrow(test)
-#head(test)
-#nrow(sim_data1)
-#summary(sim_data1)
-#summary(as.factor(sim_data1$id))
-
 ############################################
 # create directories to store results
 ############################################
@@ -346,7 +312,7 @@ scenarios_nsim <- expand_grid(scenario_id = scenarios$scenario_id,
   mutate(num = row_number()) %>%
   select(-c(hr_scenario))
 
-write_csv(scenarios_nsim, file = store_scenarios_nsim)
+# write_csv(scenarios_nsim, file = store_scenarios_nsim)
 
 pars <- scenarios_nsim %>%
   select(-c(scenario_id, dgm_id, num)) %>%
@@ -354,138 +320,14 @@ pars <- scenarios_nsim %>%
   mutate(num = row_number()) %>%
   slice(sample(1:n())) ## randomly sorting rows to even out runtime across arrays,
 ## increasing efficiency
-#names(pars)  
+
 write_csv(pars, file = store_parameters)
-pars <- read_csv(file = store_parameters)
-##############################################################
-# fit survextrap models to each of the scenarios / data.frames
-##############################################################
-
-fit_est_slurm <- function(sim_data_chr,
-                          isim,
-                          nonprop,
-                          prior_chr,
-                          mspline_chr,
-                          stan_fit_chr,
-                          chains_chr,
-                          iter_chr,
-                          smooth_model_chr,
-                          hr_function,
-                          maxT,
-                          save_file,
-                          seed,
-                          num){
-  
-  start_all <- Sys.time()
-  
-  set.seed(seed)
-  
-  sim_data <- get(sim_data_chr)
-  prior <- get(prior_chr)
-  mspline <- get(mspline_chr)
-  stan_fit <- get(stan_fit_chr)
-  smooth_model <- get(smooth_model_chr)
-  print(smooth_model)
-  
-  if(stan_fit == "mcmc"){  
-    chains <- get(chains_chr)
-    iter <- get(iter_chr)
-  } else {
-    chains <- iter <- NA
-  }
-  
-  data <- sim_data %>%
-    filter(i == isim) %>%
-    select(-i)
-  
-  print(nrow(data))
-  
-  start_fit <- Sys.time()
-    
-    fitted_mod <- survextrap(Surv(time, event) ~ trt,
-                             nonprop = nonprop,
-                             mspline = mspline, 
-                             prior_hscale = prior$prior_hscale,
-                             prior_hsd = prior$prior_hsd,
-                             prior_hrsd = prior$prior_hrsd,
-                             data = data,
-                             fit_method=stan_fit$fit_method,
-                             chains = chains,
-                             iter = iter,
-                             smooth_model = smooth_model)  
-
-
-  end_fit <- Sys.time()
-
-  print(fitted_mod)
-  
-  diags_df <- diags(fitted_mod) %>% 
-    rename(estimand=name) 
-  
-  start_est <- Sys.time()
-  
-  est_df <- mod_est_trt(fitted_mod, estimand = NULL, t = t_vec, rmst_t = rmst_vec, nonprop = FALSE,
-          return_model = TRUE, save_file = save_file)
-
-  end_est <- Sys.time()
- 
-  end_all <- Sys.time()
-  
-  timings <- tibble("estimand" = c("run_time", "fit_time", "est_time"),
-                    "value" = c(as.numeric(difftime(end_all, start_all, units='mins')),
-                                as.numeric(difftime(end_fit, start_fit, units='mins')),
-                                as.numeric(difftime(end_est, start_est, units='mins'))
-                                )  )
-    
-  res <- est_df %>% 
-    full_join(diags_df, by=c("estimand","value")) %>%
-    full_join(timings, by=c("estimand","value") )
-  
-  print(tail(res)) 
-  
-  if (!is.null(save_file)) saveRDS(res, file=save_file)
-  
-  
-}
-
-## memoise fit_est_slurm
-fit_est_slurm_memoise <- memoise::memoise(fit_est_slurm, 
-                                          cache = cachem::cache_disk(dir = paste0(store_res, "fit.cache")))
-
-
-#######################################
-# # test iteration.
-#######################################
-
-#debugonce(fit_est_slurm)
-#undebug(fit_est_slurm)
-#i <- 150
-#View(pars)
-fit_est_slurm_memoise(sim_data_chr = pars$sim_data_chr[i],
-              isim = pars$isim[i],
-              nonprop = pars$nonprop[i],
-              prior_chr = pars$prior_chr[i],
-              mspline_chr = pars$mspline_chr[i],
-              stan_fit_chr = pars$stan_fit_chr[i],
-              chains_chr = pars$chains_chr[i],
-              iter_chr = pars$iter_chr[i],
-              smooth_model_chr = pars$smooth_model_chr[i],
-              hr_function = pars$hr_function[i],
-              maxT = pars$maxT[i],
-              save_file = NULL,
-              seed = pars$seed[i],
-              num = pars$num[i])
-
-###
-#purrr::pmap(pars %>% slice(100), fit_est_slurm)
-###
+# pars <- read_csv(file = store_parameters)
 
 ######################################
-## slurm job for model fitting
+## Slurm job for model fitting
 ######################################
 
-# for survextrap
-# nrow(pars)
 # nsim = 50 ->, 100 arrays takes < 30 mins each.
 # nsim = 1,000 -> 100 arrays takes ~12 hours each
 
@@ -497,10 +339,7 @@ attach_obj <- c("surv_df",
                 paste0("chains",c(1:nscen)),
                 paste0("iter",c(1:nscen)),
                 paste0("smooth_model",1:nscen),
-                "maxT_data",
-                "fit_model", "fit_model_slurm",
                 "catchToList", "throw_sampler_warnings",
-                "extract_data",
                 "rmst_vec", "t_vec",
                 "mod_est_trt", "true_mod", "diags")
 
@@ -514,7 +353,7 @@ slurm_opts <- list(time='23:00:00',
 # nsim=50 with N=400 takes ~30 mins.
 # nsim=10 with N=10,000 opt takes ~10 mins.
 
-sjob_fit_est <- slurm_apply(fit_est_slurm_memoise, 
+sjob_fit_est <- slurm_apply(fit_est_slurm_trt, 
                             pars, 
                             jobname = "fit_est",
                             nodes = 80, 
@@ -526,13 +365,6 @@ sjob_fit_est <- slurm_apply(fit_est_slurm_memoise,
 
 saveRDS(sjob_fit_est, file = store_sjob)
 system(check_status)
-
-
-test <- readRDS("scen3/est6.rds")
-summary(as.factor(test$estimand))
-nrow(test)
-View(test)
-
 
 ##########################################################
 # Get true HR/RMST etc. for each dgm.
@@ -549,7 +381,6 @@ pars_dgm_big <- expand_grid(hr_function = 1:3,
   mutate(seed = sample(10^6:10^8, n(), replace= FALSE)) %>%
   slice(sample(1:n())) # randomise rows to even out slurm run time across arrays.
 
-# sum(pars_dgm$N)
 # length(unique(pars_dgm$seed))
 # each array takes ~1 hour.
 
@@ -569,8 +400,6 @@ sjob_dgm_big <- slurm_apply(gen_dgm,
                                              partition='core',
                                              "mem-per-cpu"= '16G'))
 
-system(check_status)
-
 ## Combine results into big data frame with N = 10^7 patients in each arm.
 
 for(i in 1:nrow(scenarios_dgm)){
@@ -585,7 +414,6 @@ for(i in 1:nrow(scenarios_dgm)){
   sim_data_big <- data.frame(comb)
   saveRDS(sim_data_big, paste0("dgm", i, "/sim_data_big.rds"))
 }
-
 
 ####################################################
 # Evaluate true values for irmst and hazard ratio. 
@@ -842,9 +670,6 @@ res <- res %>%
             by = join_by(scenario_id))
 
 saveRDS(res, file = store_plot_res)
-#names(res)
-#head(res)
 res <- readRDS(store_plot_res)
-
 
 
