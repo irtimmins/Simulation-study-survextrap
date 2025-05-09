@@ -24,7 +24,7 @@ library(emg)
 # specify jobname and path where results are to be stored.
 #############################################################
 
-jobname <- "trt" 
+jobname <- "cetux_trt" 
 store_res <- "directory/to/store/simulations"
 
 #############################################################
@@ -45,10 +45,11 @@ if(!dir.exists("log")){
 }  
 
 #########################################################
-# DGM: import trial data
+# Derive the control arm model 
+# for data-generating mechanism
 #########################################################
 
-# from cetux control arm
+# Use Bonner trial control arm
 cetux <- readRDS("Data/cetuximab_OS.rds") 
 surv_df <- cetux[cetux$treat=="Cetuximab",]
 # end of trial follow-up time for rmst computation
