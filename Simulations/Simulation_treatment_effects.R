@@ -27,13 +27,6 @@ library(emg)
 jobname <- "trt" 
 store_res <- "directory/to/store/simulations"
 
-store_sjob <- paste0(store_res, "sjob_", jobname, ".rds") 
-store_sjob_res <- paste0(store_res, "res_sjob_", jobname, ".csv") 
-store_scenarios <- paste0(store_res,"scenarios_", jobname, ".csv") 
-store_scenarios_nsim <- paste0(store_res,"scenarios_nsim_", jobname, ".csv") 
-store_parameters <- paste0(store_res,"parameters_", jobname, ".csv")
-store_plot_res <- paste0(store_res,"plots/","plot_res_", jobname, ".rds") 
-
 #############################################################
 # import trial data and call scripts to create functions.
 #############################################################
@@ -45,9 +38,7 @@ source("Functions/estimands.R")
 if(!dir.exists(store_res)){
   dir.create(store_res)
 }
-
 setwd(store_res)
-
 # create log.
 if(!dir.exists("log")){
   dir.create("log")
@@ -60,7 +51,6 @@ if(!dir.exists("log")){
 # from cetux control arm
 cetux <- readRDS("Data/cetuximab_OS.rds") 
 surv_df <- cetux[cetux$treat=="Cetuximab",]
-
 # end of trial follow-up time for rmst computation
 maxT_data <- max(surv_df$years)
 # specify number of knots for spline model
@@ -128,6 +118,7 @@ scenarios <- expand_grid(dgm_mod = "true_mod",
          label_hrsd = fct_inorder(label_hrsd),
          label_method = fct_inorder(label_method))
 
+store_scenarios <- paste0(store_res,"scenarios_", jobname, ".csv") 
 write_csv(scenarios, file = store_scenarios)
 
 nscen <- nrow(scenarios)
@@ -309,18 +300,19 @@ scenarios_nsim <- expand_grid(scenario_id = scenarios$scenario_id,
          sim_data_chr = paste0("sim_data",dgm_id),
          save_file = paste0("../scen", scenario_id, "/est", isim, ".rds"),
          seed =  round(runif(n(), min = 10*7, max = 10^9))) %>%
-  mutate(num = row_number()) %>%
-  select(-c(hr_scenario))
+  mutate(num = row_number()) 
 
-# write_csv(scenarios_nsim, file = store_scenarios_nsim)
+store_scenarios_nsim <- paste0(store_res,"scenarios_nsim_", jobname, ".csv") 
+write_csv(scenarios_nsim, file = store_scenarios_nsim)
 
 pars <- scenarios_nsim %>%
-  select(-c(scenario_id, dgm_id, num)) %>%
+  select(-c(scenario_id, dgm_id, hr_function, maxT)) %>%
   relocate(sim_data_chr) %>%
   mutate(num = row_number()) %>%
   slice(sample(1:n())) ## randomly sorting rows to even out runtime across arrays,
 ## increasing efficiency
 
+store_parameters <- paste0(store_res,"parameters_", jobname, ".csv")
 write_csv(pars, file = store_parameters)
 # pars <- read_csv(file = store_parameters)
 
@@ -363,8 +355,8 @@ sjob_fit_est <- slurm_apply(fit_est_slurm_trt,
                             pkgs = attach_pkgs,
                             slurm_options = slurm_opts)
 
+store_sjob <- paste0(store_res, "sjob_", jobname, ".rds") 
 saveRDS(sjob_fit_est, file = store_sjob)
-system(check_status)
 
 ##########################################################
 # Get true HR/RMST etc. for each dgm.
@@ -571,15 +563,9 @@ for(i in 1:nrow(scenarios_dgm)){
 
 }
 
-test <- readRDS( paste0("dgm", 3, "/true_est.RDS"))
-summary(as.factor(test$estimand))
-View(test)
-
 ####################################################
 # combine results for estimands into tidy format.
 ####################################################
-
-# try without using slurm.
 
 for(i in 1:nscen){
   
@@ -616,16 +602,6 @@ for(i in 1:nscen){
   saveRDS(res, paste0("scen", i, "_res.rds"))
   
 }
-
-
-#################################
-## Check results.
-#################################
-
-i <- 2
-test <- readRDS(paste0("scen", i, "_res.rds"))
-summary(as.factor(res$estimand))
-summary(as.factor(res$isim))
 
 ####################################################
 # Create directory for storing plots.
@@ -669,6 +645,7 @@ res <- res %>%
                      label_df,  label_gamma, label_eta,  label_hrsd, label_method), 
             by = join_by(scenario_id))
 
+store_plot_res <- paste0(store_res,"plots/","plot_res_", jobname, ".rds") 
 saveRDS(res, file = store_plot_res)
 res <- readRDS(store_plot_res)
 

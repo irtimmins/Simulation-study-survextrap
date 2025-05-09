@@ -8,9 +8,9 @@
 #' @param chains_chr Character specifying object with number of MCMC chains for survextrap.
 #' @param iter_chr Character specifying object with number of MCMC iterations for survextrap.
 #' @param smooth_model_chr Character specifying object with smooth_model specification for survextrap.
-#' @param save_file
-#' @param seed
-#' @param num
+#' @param save_file File location to store estimates.
+#' @param seed Set seed for survextrap model fit.
+#' @param num Redundant input used for post slurm checking.
 #
 
 fit_est_slurm <- function(sim_data_chr,
@@ -22,7 +22,8 @@ fit_est_slurm <- function(sim_data_chr,
                           iter_chr,
                           smooth_model_chr,
                           save_file,
-                          seed){
+                          seed,
+                          num){
   
   start_all <- Sys.time()
   
@@ -101,8 +102,9 @@ fit_est_slurm <- function(sim_data_chr,
 #' @param chains_chr Character specifying object with number of MCMC chains for survextrap.
 #' @param iter_chr Character specifying object with number of MCMC iterations for survextrap.
 #' @param smooth_model_chr Character specifying object with smooth_model specification for survextrap.
-#' @param save_file Location to save file with results.
-#' @param seed Seed for model fit.
+#' @param save_file File location to store estimates.
+#' @param seed Set seed for survextrap model fit.
+#' @param num Redundant input used for post slurm checking.
 #
 
 fit_est_slurm_trt <- function(sim_data_chr,
@@ -115,7 +117,8 @@ fit_est_slurm_trt <- function(sim_data_chr,
                           iter_chr,
                           smooth_model_chr,
                           save_file,
-                          seed){
+                          seed,
+                          num){
   
   start_all <- Sys.time()
   

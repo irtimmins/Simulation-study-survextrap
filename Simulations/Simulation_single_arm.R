@@ -40,6 +40,8 @@ setwd(store_res)
 # DGM: import trial data
 #########################################################
 
+# Derive true models using flexsurv, to use as data-generating mechanisms
+
 if(jobname == "cetux_OS"){
   
   # Cetuximab OS
@@ -64,12 +66,11 @@ if(jobname == "cetux_OS"){
   
 }
 
-
 #######################################################
 # Specify survextrap scenarios
 ########################################################
 
-# write scenarios as tibble
+# write scenarios out as tibble
 
 nsim <- 1000 # simulation replicates
 
@@ -94,34 +95,36 @@ scenarios_priors <-
               facet_plot = TRUE) %>%
   filter(mspline_bsmooth == TRUE | mspline_df > 3)
 
+# Specify the stan fit methods to vary in simulation.
+
 scenarios_fit <- tibble("stan_fit_method" = c("mcmc","opt"),
                         "chains" = c(4,NA),
                         "iter" = c(2000,NA)) %>%
   mutate(fit_id = n())
 
-# create scenarios tibble with dgm, prior and fit.
-
+# Combine these to create scenarios tibble with dgm, prior and fit.
 # replicate scenarios across each stan_fit choice
+
 scenarios <- cbind(scenarios_fit %>%
                      slice(rep(1:n(), 
                                each = nrow(scenarios_priors))),
                    scenarios_priors)
 
-# replicate scenarios across each dgm
+# replicate scenarios across each dgm (each true survival model)
 scenarios <- cbind(scenarios_dgm %>%
                      slice(rep(1:n(), each = nrow(scenarios))),
                    scenarios) %>%
   mutate(scenario_id = row_number())
 
+# store scenarios.
 store_scenarios <- paste0(store_res,"scenarios_", jobname, ".csv") 
 write_csv(scenarios, file = store_scenarios)
-scenarios <- read_csv(store_scenarios)
+# scenarios <- read_csv(store_scenarios)
 
 # Number of simulation scenarios
 nscen <- nrow(scenarios)
 
-# Generate prior and mspline objects for survextrap in 
-# each scenario
+# Generate prior and mspline objects for survextrap in each scenario
 
 for(i in 1:nscen){
   
@@ -148,9 +151,8 @@ for(i in 1:nscen){
 }
 
 ########################################################
-# Simulate dataset from dgm
+# Simulate trial datasets
 ########################################################
-
 
 ndgm <- nrow(scenarios_dgm)
 
@@ -236,7 +238,7 @@ pars_slurm <- pars %>%
   mutate(scenario_id = as.numeric(scenario_id)) %>%
   left_join(scenarios %>% select(scenario_id, stan_fit_method),
             by = join_by(scenario_id))  %>% 
-  select(-c(stan_fit_method, scenario_id))
+  select(-c(stan_fit_method, scenario_id, maxT))
 
 attach_obj <- c("surv_df", 
                 paste0("sim_data",1:ndgm),
@@ -324,8 +326,3 @@ sjob_comb_results <- slurm_apply(comb_res_slurm,
 
 system(check_status)
 
-test <- readRDS("scen1_res.rds")
-test <- readRDS( paste0("_rslurm_",jobname,"_comb/results_0.RDS"))
-test
-#View(test)
-#summary(as.factor(test$estimand))
