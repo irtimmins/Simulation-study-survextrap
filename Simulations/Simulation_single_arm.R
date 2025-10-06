@@ -326,3 +326,4 @@ sjob_comb_results <- slurm_apply(comb_res_slurm,
 
 system(check_status)
 
+
