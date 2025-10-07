@@ -20,14 +20,11 @@ library(kableExtra)
 library(formattable)
 library(data.table)
 
-
 user <- Sys.info()["user"]
-store_directory <- paste0("/projects/aa/statistical_innovation/itimmins/simsurvextrap/aim1_simulations/slurm/")
+store_directory <- "C:/Users/LSHIT9/OneDrive - London School of Hygiene and Tropical Medicine/Documents/Survival extrapolation/Paper 1/Data/"
 
-source("R/fit_model.R")
-source("R/estimands.R")
-source("R/visualise.R")
-source("R/performance.R")
+source("Functions/estimands.R")
+source("Functions/performance.R")
 
 ##########################################
 # Combine data for flexsurv.
@@ -347,13 +344,15 @@ y_min <- min(scen_df %>%
               by = join_by(scenario_id))
   #View(test)
   
+  # set axis limits.
   if(jobname == cetux_jobname) {
-    xlim <- c(3.10, 3.34) 
+    xlim <- c(3.08, 3.34) 
     xbreaks <- seq(from = 3.10, to = 3.34, by = 0.05)                       
   } else{
-    xlim <- c(1.85, 2.14)
-    xbreaks <- seq(from = 1.85, to = 2.14, by = 0.05)
+    xlim <- c(1.82, 2.16)
+    xbreaks <- seq(from = 1.85, to = 2.10, by = 0.05)
   }
+  
   plot2 <- plot_df2 %>%
     filter(scenario_id %in% scen_df$scenario_id) %>%
     left_join(scen_df %>% select(scenario_id, y_height), 
@@ -590,110 +589,4 @@ tiff(file = paste0(store_directory, "figures/figure_bench_perform.tiff"),
 
 figure_all
 dev.off()
-
-
-
-############################################
-
-scenarios_rstpm
-
-res_test <- res 
-
-res_test %>%
-  filter(method  == "rstpm2",
-         df == 6,
-         isim != 0,
-         value > 4)
-
-res_test %>%
-  filter(method  == "rstpm2",
-         df == 6,
-         isim == 789)
-
-res_test[9842,]
-
-summary(res_test )
-summary(as.factor(res_test$method))
-mean(res_test$value_se)
-sd(res_test$value[res_test$value < 4])
-sd(res_test$value[res_test$value < 6])
-summary(res_test$value)
-
-sum(res_test$value > 3.4)
-res_test$value[res_test$value > 3.5]
-
-##############################################
-
-scenarios_rstpm
-res_test2 <- readRDS(paste0("rstpm2_scen", 4, "_res.rds"))
-res_test2 <- res_test2 %>%
-    filter(isim == 819)
-res_test2
-res_test2 <- res_test2 %>%
-  filter(isim == 785)
-res_test2
-res_test2 <- res_test2 %>%
-  filter(isim == 789)
-res_test2
-
-res_test4 <- readRDS(paste0("rstpm2_scen", 4, "_est.rds"))
-res_test4 %>%
-  filter(isim == 785)
-
-##############################################
-
-res_test3 <- readRDS("scen_rstpm2_4/rstpm2_est785.rds")
-res_test3
-
-
-
-##############################
-
-
-res_rstpm2 %>%
-  filter(isim == 785)
-
-res <- rbind(res_flex,
-             res_rstpm2) %>%
-  group_by(df, method) %>%
-  mutate(scenario_id = cur_group_id())
-
-
-
-
-
-names(sim_data1)
-test_sim <- sim_data1 %>%
-  filter(i == 785)
-test_sim  
-
-
-stpm2mod0 <- try(stpm2(Surv(time, event)~1, 
-                       data = test_sim , 
-                       df=4))
-
-
-mod0_run_status <- inherits(stpm2mod0, "try-error")
-
-# model run succesfully, 
-# continue with standsurv:
-
-if(!mod0_run_status){
-  
-  est0 <- predict(stpm2mod0, type = "rmst", newdata = tibble(time=5),se.fit = TRUE)
-  
-  est_rmst <- tibble(estimand = "rmst", 
-                     trt = NA, # needs to be 0,1.
-                     t = 5,
-                     value = est0$Estimate , 
-                     value_ci_low = est0$lower,
-                     value_ci_high = est0$upper, 
-                     value_se = NA) %>%
-    select(estimand, trt, t, value, value_ci_low, value_ci_high, value_se)
-  
-  est <- est_rmst
-  print(head(est))
-  saveRDS(est, save_file)
-}
-}
 

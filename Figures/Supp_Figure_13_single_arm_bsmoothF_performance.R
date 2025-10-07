@@ -20,27 +20,19 @@ library(kableExtra)
 library(formattable)
 library(data.table)
 
-
 user <- Sys.info()["user"]
-store_directory <- paste0("/projects/aa/statistical_innovation/itimmins/simsurvextrap/aim1_simulations/slurm/")
+store_directory <- "C:/Users/LSHIT9/OneDrive - London School of Hygiene and Tropical Medicine/Documents/Survival extrapolation/Paper 1/Data/"
 
-source("R/fit_model.R")
-source("R/estimands.R")
-source("R/visualise.R")
-source("R/performance.R")
-
+source("Functions/estimands.R")
+source("Functions/performance.R")
 
 ##########################################
 # Combine results across iterations.
 ##########################################
 
-#jobname <- "master_cetux12"
-#jobname <- "master_niv4_smooth" 
-#jobname <- "master_cetux10"  
-#jobname <- "master_niv3"
 
-jobname <-  "cetux16"
-#jobname <- "niv8"
+#jobname <-  "cetux16"
+jobname <- "niv8"
 
 
   setwd(paste0(store_directory , "simsurvextrap_slurm_", jobname, "/"))
@@ -89,20 +81,16 @@ for(i in scenarios$scenario_id){
 # Plot RMST at 5-y performance measures
 ##########################################
 
-#cetux_vec <- c("master_cetux10","master_cetux12")
-#niv_vec <- c("master_niv3","master_niv4_smooth")
 cetux_vec <- "cetux16"
 niv_vec <- "niv8" 
 bsmooth_vec <- c(cetux_vec[1], niv_vec[1])  
 
-#eval(paste0(scen_name, "_vec"))
 scen_name <- "cetux"
 job_vec <- get(paste0(scen_name, "_vec"))
+
 for(jobname in  job_vec){
-  #jobname <- niv_vec[1]
   #jobname <- "cetux16"
-  #jobname <- "master_niv4_smooth"
-  
+
   setwd(paste0(store_directory , "simsurvextrap_slurm_", jobname, "/"))
   
   #dir.create("plots")
@@ -111,12 +99,7 @@ for(jobname in  job_vec){
 
   scenarios <- scenarios %>%
     filter(prior_hscale_mean == 0)
-  #nscen <- nrow(scenarios)
-  
-  #res_test <- readRDS("scen66_est_rmst.rds")
-  #res_test
-  #View(res_test)
-  #summary(as.factor(res_test$estimand_id))
+
   
   ###################################################
   # Combine data together.
@@ -214,30 +197,20 @@ saveRDS(all_res, paste0("../one_arm_bsmooth/all_res_", scen_name,".RDS"))
 saveRDS(all_perform_res, paste0("../one_arm_bsmooth/all_perform_res_", scen_name,".RDS"))
 saveRDS(all_scenarios, paste0("../one_arm_bsmooth/all_scenarios_", scen_name ,".RDS"))
 
-#  saveRDS(all_res, "../one_arm_bsmooth/all_res_niv.RDS")
-#  saveRDS(all_perform_res, "../one_arm_bsmooth/all_perform_res_niv.RDS")
-#  saveRDS(all_scenarios, "../one_arm_bsmooth/all_scenarios_niv.RDS")
-
-#head(all_scenarios)
-
-#head(all_res)
-#head(all_res)
-#View(all_res)
 
 ####################################
 # Plot.
 ####################################
 
-
-test_jobname <- "cetux16"
-#test_jobname <- "niv8"
-#setwd()
-test1 <- read_csv(paste0(store_directory , "simsurvextrap_slurm_", test_jobname, "/",
-                         "scenarios_", test_jobname ,".csv"))
-
-
-summary(as.factor(test1$mspline_bsmooth))
-View(test1)
+# test_jobname <- "cetux16"
+# #test_jobname <- "niv8"
+# #setwd()
+# test1 <- read_csv(paste0(store_directory , "simsurvextrap_slurm_", test_jobname, "/",
+#                          "scenarios_", test_jobname ,".csv"))
+# 
+# 
+# summary(as.factor(test1$mspline_bsmooth))
+#View(test1)
 
 setwd(paste0(store_directory , "one_arm_bsmooth", "/"))
 
@@ -253,7 +226,6 @@ for(scen_name in c("cetux", "niv")){
 all_scenarios <- readRDS(paste0("all_scenarios_", scen_name, ".RDS"))
 all_perform_res <- readRDS(paste0("all_perform_res_", scen_name, ".RDS"))
 all_res <- readRDS(paste0("all_res_", scen_name, ".RDS"))
-
 #
 
 all_scenarios <- all_scenarios %>%
@@ -302,7 +274,6 @@ scen_df <- all_scenarios  %>%
                      y_height = 0.5,
                      fontface_chr = "bold")) #%>%
 #  mutate(y_height = y_height + 10) 
-
 #scen_df$mspline_bsmooth <- if_else(scen_df$mspline_bsmooth == "True", "Smoothed", "Unsmoothed")
 #head(scen_df)
 #tail(scen_df)
@@ -320,7 +291,6 @@ y_min <- min(scen_df %>%
 #########################################
 # Plot 1. Model
 #########################################
-
 
 plot1 <- scen_df %>%
   ggplot(aes(x = 0, y = y_height)) +
@@ -379,11 +349,11 @@ plot_df2 <- est_mean %>%
 #View(test)
 
 if(scen_name== "cetux") {
-  xlim <- c(3.10, 3.29) 
-  xbreaks <- seq(from = 3.10, to = 3.29, by = 0.05)                      
-} else{
-  xlim <- c(1.90, 2.09)
-  xbreaks <- seq(from = 1.90, to = 2.09, by = 0.05)
+  xlim <- c(3.08, 3.34) 
+  xbreaks <- seq(from = 3.10, to = 3.34, by = 0.05)                 
+} else {
+  xlim <- c(1.82, 2.16)
+  xbreaks <- seq(from = 1.85, to = 2.10, by = 0.05)
 }
 
 plot2 <- plot_df2 %>%
@@ -561,8 +531,8 @@ plot4 <- plot_df4 %>%
   geom_point(aes(x=est_low, y = y_height), shape = 91, size = 2.5, colour = "#830051")+
   geom_point(aes(x=est_high, y = y_height), shape = 93, size = 2.5, colour = "#830051")+
   geom_point(alpha = 0.7, colour= "#830051") +
-  scale_x_continuous("Coverage", limits = c(0.8, 1.00), labels = scales::percent,
-                     breaks = seq(from = 0.8, to = 1.00, by = 0.05),
+  scale_x_continuous("Coverage", limits = c(0.75, 1.00), labels = scales::percent,
+                     breaks = seq(from = 0.75, to = 1.00, by = 0.05),
                      expand = c(0, 0))+
   ylim(c(y_min,y_max))
 plot4

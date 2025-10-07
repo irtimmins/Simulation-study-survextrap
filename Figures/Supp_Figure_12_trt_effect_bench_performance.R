@@ -19,22 +19,17 @@ library(data.table)
 library(emg)
 library(rstpm2)
 
-
 jobname <- "trt5_rw" 
 
 user <- Sys.info()["user"]
-store_directory <- paste0("/projects/aa/statistical_innovation/itimmins/simsurvextrap/aim1_simulations/slurm/")
+store_directory <- "C:/Users/LSHIT9/OneDrive - London School of Hygiene and Tropical Medicine/Documents/Survival extrapolation/Paper 1/Data/"
 
-#####################################################
+source("Functions/estimands.R")
+source("Functions/performance.R")
 
-
-source("R/simulate_dgm_treatment_effect.R")
-source("R/simulate_dgm.R")
-source("R/functions_treatment_effect.R")
-source("R/fit_model.R")
-source("R/estimands.R")
-source("R/visualise.R")
-source("R/performance.R")
+user <- Sys.info()["user"]
+store_res <- paste0(store_directory, "simsurvextrap_slurm_", jobname, "/") 
+setwd(store_res)
 
 #####################################################
 
@@ -67,7 +62,7 @@ scen_df <- rbind(scenarios_flex %>%  mutate(model = "flexsurv"),
                  scenarios_rstpm %>% mutate(model = "rstpm2")) %>%
   filter(df >= df_tvc)
 
-View(scen_df)
+#View(scen_df)
 #View(scen_df)
 
 ################################################################
@@ -92,8 +87,6 @@ for(i in 1:nrow(scenarios_flex)){
 
 #head(res_flex)
 
-
-
 for(i in 1:nrow(scenarios_rstpm)){
   
   temp <- readRDS(paste0("scen_rstpm2_", i, "_res_rmst.rds"))
@@ -113,23 +106,13 @@ res <- rbind(res_flex, res_rstpm2) %>%
   filter(value != 0) %>%
   filter(!is.na(value_se) | isim == 0)
 
-#summary(as.factor(res$value[res$isim == 0]))
-#sum(res$value < 4)
-#sum(res$value == 5)
-#View(res)
-#res2 <- res %>%
-#  filter(!is.na(value_ci_low)) %>%
-#  filter(value == value_ci_low)
-#sum(res2$value == res2$value_ci_high)
-#res2
-
-
 ##########################################################
 # Performance measures.
 ##########################################################
 
 est_id_choose <- "irmst1"
 perform_res <- NULL
+
 for(i in 1:nrow(scen_df)){
   temp_res <- sim_perform(res %>%
                             filter(new_id == scen_df$new_id[i]) %>%
@@ -145,8 +128,7 @@ for(i in 1:nrow(scen_df)){
   
 }
 
-head(perform_res)
-
+#head(perform_res)
 all_res <- 
   perform_res %>%
   filter(stat %in% c( "nsim", "bias", "rbias","empse", "mse", "modelse", "cover")) %>%
@@ -250,13 +232,12 @@ for(scenario_num in 1:3){
   #plot_df$scenario_id
   
   #xlim1 <-
-  #0.55-0.36
-  xlim1 <- c(0.31, 0.50)
-  xbreaks1 <- seq(from = 0.35, to = 0.45, by = 0.05)
-  xlim2 <- c(0.41, 0.60)
-  xbreaks2 <- seq(from = 0.45, to = 0.55, by = 0.05)
-  xlim3 <- c(0.41, 0.60)
-  xbreaks3 <- seq(from = 0.45, to = 0.55, by = 0.05)
+  xlim1 <- c(0.31, 0.55)
+  xbreaks1 <- seq(from = 0.35, to = 0.50, by = 0.05)
+  xlim2 <- c(0.36, 0.60)
+  xbreaks2 <- seq(from = 0.40, to = 0.55, by = 0.05)
+  xlim3 <- c(0.36, 0.60)
+  xbreaks3 <- seq(from = 0.40, to = 0.55, by = 0.05)
   
   
   plot2 <- plot_df2 %>%
@@ -428,12 +409,12 @@ plot_df3 <- bias_round %>%
     geom_point(aes(x=est_low, y = y_height), shape = 91, size = 2.5, colour= "#830051")+
     geom_point(aes(x=est_high, y = y_height), shape = 93, size = 2.5, colour= "#830051")+
     geom_point(alpha = 0.7, colour= "#830051") +
-    scale_x_continuous("Coverage", limits = c(0.80, 1.00), labels = scales::percent,
-                       breaks = seq(from = 0.80, to = 1.00, by = 0.05),
+    scale_x_continuous("Coverage", limits = c(0.75, 1.00), labels = scales::percent,
+                       breaks = seq(from = 0.75, to = 1.00, by = 0.05),
                        expand = c(0, 0))+
     ylim(c(y_min,y_max))
-  plot4
   
+  plot4
   
   ##################################################
   ##################################################
@@ -473,7 +454,6 @@ plot_df3 <- bias_round %>%
   saveRDS(figure, paste0("plots/supfigure_trt_bench_",scenario_num,".RDS"))
 }
 
-
 figure1
 figure2
 figure3
@@ -482,7 +462,6 @@ figure_all <- plot_grid(NULL, figure1, NULL, figure2, NULL, figure3,
                         rel_heights = c(0.01, 0.4,0.01,  0.4, 0.01, 0.4),
                         ncol = 1)
 figure_all
-
 
 pdf(file = paste0(store_directory, "figures/figure_trt_bench_perform.pdf"),   
     width = 8.5, 
@@ -499,5 +478,4 @@ tiff(file = paste0(store_directory, "figures/figure_trt_bench_perform.tiff"),
 
 figure_all
 dev.off()
-
 

@@ -20,10 +20,9 @@ library(formattable)
 library(data.table)
 
 user <- Sys.info()["user"]
-store_directory <- paste0("/projects/aa/statistical_innovation/itimmins/simsurvextrap/aim1_simulations/slurm/")
+store_directory <- "C:/Users/LSHIT9/OneDrive - London School of Hygiene and Tropical Medicine/Documents/Survival extrapolation/Paper 1/Data/"
 
 source("Functions/estimands.R")
-source("Functions/visualise.R")
 source("Functions/performance.R")
 
 ##########################################
@@ -37,7 +36,7 @@ niv_jobname <- "niv8"
 est_id_choose <- "rmst1"
 
 for(jobname in c(cetux_jobname, niv_jobname)){
-
+ #jobname <- cetux_jobname
   setwd(paste0(store_directory , "simsurvextrap_slurm_", jobname, "/"))
   print(getwd())
 
@@ -105,28 +104,28 @@ for(jobname in c(cetux_jobname, niv_jobname)){
   
   saveRDS(all_res, "plots/all_res.RDS")
   
-  
   # convert relative bias to percentage
-  #all_res$est_round[all_res$stat == "rbias"] <- 100*all_res$est[all_res$stat == "rbias"]
-  #all_res$mcse[all_res$stat == "rbias"] <- 100*all_res$mcse[all_res$stat == "rbias"]
-  #all_res$est_round[all_res$stat == "rbias"] <- sprintf("%.1f", round(all_res$est[all_res$stat == "rbias"] , 3))
-  #all_res$mcse_round[all_res$stat == "rbias"] <- sprintf("%.2f", round(all_res$mcse[all_res$stat == "rbias"] , 3))
-  #all_res$est_round[all_res$stat == "rbias"] <- paste0(all_res$est_round[all_res$stat == "rbias"], "%")
-  #all_res$mcse_round[all_res$stat == "rbias"] <- paste0(all_res$mcse_round[all_res$stat == "rbias"], "%")
+  # all_res$est_round[all_res$stat == "rbias"] <- 100*all_res$est[all_res$stat == "rbias"]
+  # all_res$mcse[all_res$stat == "rbias"] <- 100*all_res$mcse[all_res$stat == "rbias"]
+  # all_res$est_round[all_res$stat == "rbias"] <- sprintf("%.1f", round(all_res$est[all_res$stat == "rbias"] , 3))
+  # all_res$mcse_round[all_res$stat == "rbias"] <- sprintf("%.2f", round(all_res$mcse[all_res$stat == "rbias"] , 3))
+  # all_res$est_round[all_res$stat == "rbias"] <- paste0(all_res$est_round[all_res$stat == "rbias"], "%")
+  # all_res$mcse_round[all_res$stat == "rbias"] <- paste0(all_res$mcse_round[all_res$stat == "rbias"], "%")
   
 }
 
 ####################################
-# Plot.
+# Plot. 
 ####################################
 
-names(scenarios)
-summary(as.factor(scenarios$prior_hsd_rate))
+#names(scenarios)
+#summary(as.factor(scenarios$prior_hsd_rate))
 
 for(jobname in c(cetux_jobname, niv_jobname)){
   
   for(stan_fit in c("mcmc", "opt")){
     #jobname <- "cetux16" 
+    #stan_fit <- "mcmc"
     
     setwd(paste0(store_directory , "simsurvextrap_slurm_", jobname, "/"))
     print(getwd())
@@ -249,11 +248,11 @@ for(jobname in c(cetux_jobname, niv_jobname)){
       #View(test)
       
       if(jobname == cetux_jobname) {
-        xlim <- c(3.05, 3.29) 
-        xbreaks <- seq(from = 3.05, to = 3.29, by = 0.05)                       
+        xlim <- c(3.08, 3.34) 
+        xbreaks <- seq(from = 3.10, to = 3.34, by = 0.05)                       
       } else{
-        xlim <- c(1.80, 2.04)
-        xbreaks <- seq(from = 1.80, to = 2.04, by = 0.05)
+        xlim <- c(1.82, 2.16)
+        xbreaks <- seq(from = 1.85, to = 2.10, by = 0.05)
       }
       
       plot2 <- plot_df2 %>%

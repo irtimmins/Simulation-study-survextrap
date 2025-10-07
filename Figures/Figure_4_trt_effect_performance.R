@@ -27,18 +27,10 @@ library(data.table)
 jobname <- "trt6" 
 
 user <- Sys.info()["user"]
-store_directory <- paste0("/projects/aa/statistical_innovation/itimmins/simsurvextrap/aim1_simulations/slurm/")
+store_directory <- "C:/Users/LSHIT9/OneDrive - London School of Hygiene and Tropical Medicine/Documents/Survival extrapolation/Paper 1/Data/"
 
-source("R/simulate_dgm_treatment_effect.R")
-source("R/simulate_dgm.R")
-source("R/functions_treatment_effect.R")
-source("R/fit_model.R")
-source("R/estimands.R")
-source("R/visualise.R")
-source("R/performance.R")
-
-
-
+source("Functions/estimands.R")
+source("Functions/performance.R")
 
 user <- Sys.info()["user"]
 store_res <- paste0(store_directory, "simsurvextrap_slurm_", jobname, "/") 
@@ -59,8 +51,8 @@ setwd(store_res)
 
 scenarios <- read_csv(paste0("scenarios_", jobname ,".csv"))
 nscen <- nrow(scenarios)
-nscen
-scenarios
+#nscen
+#scenarios
 
 for(i in scenarios$scenario_id){
 
@@ -234,14 +226,14 @@ for(smooth_model_type in c("random_walk", "exchangeable")){
       ungroup()
     
     
-    head(est_true)
+   #head(est_true)
     
     bias <- all_res %>%
       filter(stat == "bias") %>%
       mutate(est_high = est + 1*mcse,
              est_low = est - 1*mcse) %>%
       select(est, mcse, est_low, est_high, scenario_id)
-    head(bias)
+   # head(bias)
     
     plot_df2 <- cbind(est_mean, 
                       est_true %>% select(estimand_true),
@@ -250,14 +242,13 @@ for(smooth_model_type in c("random_walk", "exchangeable")){
       filter(!is.na(hr_scenario)) #%>%
     
     #plot_df$scenario_id
-    
     #xlim1 <-
     #0.55-0.36
-    xlim1 <- c(0.31, 0.50)
-    xbreaks1 <- seq(from = 0.35, to = 0.45, by = 0.05)
-    xlim2 <- c(0.36, 0.55)
-    xbreaks2 <- seq(from = 0.35, to = 0.50, by = 0.05)
-    xlim3 <- c(0.41, 0.60)
+    xlim1 <- c(0.31, 0.55)
+    xbreaks1 <- seq(from = 0.35, to = 0.50, by = 0.05)
+    xlim2 <- c(0.36, 0.60)
+    xbreaks2 <- seq(from = 0.40, to = 0.55, by = 0.05)
+    xlim3 <- c(0.36, 0.60)
     xbreaks3 <- seq(from = 0.40, to = 0.55, by = 0.05)
     
     
@@ -435,12 +426,12 @@ for(smooth_model_type in c("random_walk", "exchangeable")){
       geom_point(aes(x=est_low, y = y_height), shape = 91, size = 2.5, colour= "#830051")+
       geom_point(aes(x=est_high, y = y_height), shape = 93, size = 2.5, colour= "#830051")+
       geom_point(alpha = 0.7, colour= "#830051") +
-      scale_x_continuous("Coverage", limits = c(0.80, 1.00), labels = scales::percent,
-                         breaks = seq(from = 0.80, to = 1.00, by = 0.05),
+      scale_x_continuous("Coverage", limits = c(0.75, 1.00), labels = scales::percent,
+                         breaks = seq(from = 0.75, to = 1.00, by = 0.05),
                          expand = c(0, 0))+
       ylim(y_limits)
-    plot4
     
+    plot4
     
     ##################################################
     ##################################################
