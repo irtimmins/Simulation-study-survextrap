@@ -27,10 +27,22 @@ scenario_hr <- function(hr_scenario){
       return(exp(loghr))
     }  
     
+  } else if(hr_scenario == 4) {
+    
+    hr <- function(t, gamma, knots, beta) {
+      
+      s <- function(t) 0.5*(1 + tanh(beta[1]*(t - 1)))
+      d <- function(t) 1 - 1/(1 + exp(-beta[2]*(t - 2.5)))
+      
+      loghr <- (beta[3] + (beta[4] - beta[3]) * s(t)) * d(t)
+      
+      return(exp(loghr))
+    }  
+    
   }
-
 }
-
+  
+  
 scenario_haz <- function(hr_scenario){
   
   if(hr_scenario == 1) {
@@ -54,6 +66,19 @@ scenario_haz <- function(hr_scenario){
     haz <- function(t, gamma, knots, beta, trt) {
       loghaz <- log(hsurvspline(x = t, gamma = gamma, knots = knots))+
         (beta[1]+beta[2]*demg(x = t, mu = beta[3], sigma = beta[4], lambda = beta[5]))*trt
+      return(exp(loghaz))
+    }  
+    
+  }else if(hr_scenario == 4) {
+    
+    haz <- function(t, gamma, knots, beta, trt) {
+      
+      s <- function(t) 0.5*(1 + tanh(beta[1]*(t - 1)))
+      d <- function(t) 1 - 1/(1 + exp(-beta[2]*(t - 2.5)))
+      
+      loghaz <- log(hsurvspline(x = t, gamma = gamma, knots = knots))+ 
+        (beta[3] + (beta[4] - beta[3]) * s(t)) * d(t)*trt
+
       return(exp(loghaz))
     }  
     
