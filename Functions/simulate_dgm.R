@@ -88,7 +88,21 @@ sim_dgm_trt <- function(gamma = NULL,
       return(exp(loghaz))
     }  
     
-  }
+  } else if(hr_scenario == 4) {
+    
+    haz <- function(t, gamma, knots, beta, trt) {
+      
+      s <- function(t) 0.5*(1 + tanh(beta[1]*(t - 1)))
+      d <- function(t) 1 - 1/(1 + exp(-beta[2]*(t - 2.5)))
+      
+      t <- as.matrix(t)
+      trow <- nrow(t)
+      loghaz <- log(hsurvspline(x = t, gamma = gamma, knots = knots))+ 
+        (beta[3] + (beta[4] - beta[3]) * s(t)) * d(t)*trt
+      
+      loghaz <- matrix(loghaz, nrow = trow)
+      return(exp(loghaz))
+    }  
   
   
   ## Cumulative hazard function using Guassian quadrature.
