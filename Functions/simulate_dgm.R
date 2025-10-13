@@ -104,7 +104,8 @@ sim_dgm_trt <- function(gamma = NULL,
       return(exp(loghaz))
     }  
   
-  
+  }
+    
   ## Cumulative hazard function using Guassian quadrature.
   
   f1 <- function(t,lnU,nodes,gamma, knots, beta, trt) {
