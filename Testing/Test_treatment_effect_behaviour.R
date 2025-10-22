@@ -30,19 +30,19 @@ gamma <- true_mod$coefficients
 knots <- true_mod$knots 
 beta <-  beta_true 
 #trt <- 0
-
-a <- log(0.5); b <- log(1.8)
-ks <- 5; kd <- 10
-
-s <- function(t) 0.5*(1 + tanh(ks*(t - 1)))
-d <- function(t) 1 - 1/(1 + exp(-kd*(t - 2.5)))
+# 
+# a <- log(0.5); b <- log(1.8)
+# ks <- 5; kd <- 10
+# 
+# s <- function(t) 0.5*(1 + tanh(ks*(t - 1)))
+# d <- function(t) 1 - 1/(1 + exp(-kd*(t - 2)))
 
 beta4 <- c(5, 10, log(0.5), log(1.8))
 
 haz <- function(t, gamma, knots, beta, trt) {
  
-  s <- function(t) 0.5*(1 + tanh(beta[1]*(t - 1)))
-  d <- function(t) 1 - 1/(1 + exp(-beta[2]*(t - 2.5)))
+  s <- function(t) 0.5*(1 + tanh(beta[1]*(t - 0.75)))
+  d <- function(t) 1 - 1/(1 + exp(-beta[2]*(t - 1.6)))
   
   loghaz <- log(hsurvspline(x = t, gamma = gamma, knots = knots))+ 
   (beta[3] + (beta[4] - beta[3]) * s(t)) * d(t)*trt
@@ -129,7 +129,7 @@ data_test %>%
   geom_line()+
   scale_y_continuous(limits = c(0,1))
 
-#survival_control(2)
+  #survival_control(2)
 
 
 
