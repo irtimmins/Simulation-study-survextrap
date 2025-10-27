@@ -37,7 +37,7 @@ beta <-  beta_true
 # s <- function(t) 0.5*(1 + tanh(ks*(t - 1)))
 # d <- function(t) 1 - 1/(1 + exp(-kd*(t - 2)))
 
-beta4 <- c(5, 10, log(0.5), log(1.8))
+beta4 <- c(5, 6, log(0.5), log(1.8))
 
 haz <- function(t, gamma, knots, beta, trt) {
  
