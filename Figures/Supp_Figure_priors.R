@@ -6,21 +6,22 @@ library(ggplot2)
 library(cowplot)
 library(purrr)
 
-surv_df <- readRDS("../../Data/simsurvextrap_slurm_cetux16/")
-surv_df <- sim_data1 %>%
-  filter(i == 1) %>%
-  as_tibble()
-
 store_directory <- "C:/Users/LSHIT9/OneDrive - London School of Hygiene and Tropical Medicine/Documents/Survival extrapolation/Paper 1/Data/figures"
+
+surv_df <- readRDS("Data/cetuximab_OS_simulated_example.rds")
 
 for(k in 1:3){
   
   
-  prior_choice <- c(1, 5, 10)[k]
+  prior_choice <- c(1, 5, 20)[k]
   
+ # mspline_evenly_spaced = list(knots = seq(from = 0.5, to = 5, length.out = 9))
   
   nd_mod <- survextrap(Surv(time, event) ~ 1, data=surv_df, smooth_model =  "random_walk", fit_method = "opt",
-                       prior_hsd = p_gamma(2, prior_choice))
+                       prior_hsd = p_gamma(2, prior_choice)) #, mspline = mspline_evenly_spaced)
+  #nd_mod$mspline$knots
+  
+  
   #plot(nd_mod)
   #print_priors(nd_mod)
   
@@ -35,7 +36,7 @@ for(k in 1:3){
   plot_a <- ggplot(haz_sim, aes(x=time, y=haz, group=rep)) + 
     theme_classic()+
     geom_line( colour = "gray50", alpha = 0.7) +
-    scale_y_continuous("Hazard", limits=c(0,50))+
+    scale_y_continuous("Hazard", limits=c(0,54))+
     scale_x_continuous("Time (years)", breaks = 0:5, limits = c(0,5))
   
   plot_a
