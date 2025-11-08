@@ -24,16 +24,13 @@ library(data.table)
 
 #######################################################
 
-jobname <- "trt6" 
-
-user <- Sys.info()["user"]
 store_directory <- "C:/Users/LSHIT9/OneDrive - London School of Hygiene and Tropical Medicine/Documents/Survival extrapolation/Paper 1/Data/"
 
 source("Functions/estimands.R")
 source("Functions/performance.R")
 
-user <- Sys.info()["user"]
-store_res <- paste0(store_directory, "simsurvextrap_slurm_", jobname, "/") 
+jobname <- "cetux_trt3"
+store_res <- paste0(store_directory, "simsurvextrap_trt3/") 
 setwd(store_res)
 
 #setwd(paste0(store_directory , "simsurvextrap_slurm_", jobname, "/"))
@@ -124,12 +121,12 @@ res <- readRDS("plots/res.RDS")
 perform_res <- readRDS("plots/perform_res.RDS")
 all_res <- readRDS("plots/all_res.RDS")
 
-names(scenarios)
-summary(as.factor(scenarios$prior_hsd_rate))
-summary(as.factor(scenarios$prior_hrsd_rate))
+#names(scenarios)
+#summary(as.factor(scenarios$prior_hsd_rate))
+#summary(as.factor(scenarios$prior_hrsd_rate))
 
 for(smooth_model_type in c("random_walk", "exchangeable")){
-  #smooth_model_type <- "exchangeable"
+  #smooth_model_type <- "random_walk"
   
   if(smooth_model_type == "random_walk") smooth_model_ext <- "randwalk"
   if(smooth_model_type == "exchangeable") smooth_model_ext <- "exch"
@@ -177,9 +174,11 @@ for(smooth_model_type in c("random_walk", "exchangeable")){
   
   label_vec <- c("(a) Scenario 1: Constant effect (proportional hazards)",
                  "(b) Scenario 2: Waning effect", 
-                 "(c) Scenario 3: Delayed then waning effect")
+                 "(c) Scenario 3: Delayed then waning effect",
+                 "(d) Scenario 4: Crossing survival curves")
   
-  for(scenario_num in 1:3){
+  
+  for(scenario_num in 1:4){
     #scenario_num <- 1
     
     plot_df <- scen_df %>%
@@ -250,7 +249,8 @@ for(smooth_model_type in c("random_walk", "exchangeable")){
     xbreaks2 <- seq(from = 0.40, to = 0.55, by = 0.05)
     xlim3 <- c(0.36, 0.60)
     xbreaks3 <- seq(from = 0.40, to = 0.55, by = 0.05)
-    
+    xlim4 <- c(-0.14, 0.10)
+    xbreaks4 <- seq(from = -0.10, to = 0.05, by = 0.05)
     
     plot2 <- plot_df2 %>%
       ggplot(aes(x = estimand_mean, y = y_height)) +
@@ -466,7 +466,7 @@ for(smooth_model_type in c("random_walk", "exchangeable")){
     figure <- plot_grid(figure_title, figure_row,
                         ncol = 1,
                         rel_heights = c(0.1, 1))
-    
+    #figure
     assign(paste0("figure", scenario_num), figure)
     saveRDS(figure, paste0("plots/figure2_",scenario_num,"_", smooth_model_ext ,".RDS"))
   }
@@ -474,27 +474,80 @@ for(smooth_model_type in c("random_walk", "exchangeable")){
   figure1
   figure2
   figure3
+  figure4
   
   #figure_cetux <- readRDS(paste0(store_directory , "simsurvextrap_slurm_", "master_cetux10", "/plots/figure1.RDS"))
   #figure_niv <- readRDS(paste0(store_directory , "simsurvextrap_slurm_", "master_niv3", "/plots/figure1.RDS"))
   
-  figure_all <- plot_grid(NULL, figure1, NULL, figure2, NULL, figure3,
-                          rel_heights = c(0.01, 0.4,0.01,  0.4, 0.01, 0.4), 
+  figure_all <- plot_grid(NULL, figure1, NULL, figure2, NULL, figure3, NULL, figure4,
+                          rel_heights = c(0.01, 0.4,0.01,  0.4, 0.01, 0.4, 0.01, 0.4), 
                           ncol = 1)
   
-  pdf(file = paste0(store_directory, "figures/figure_trt_perform_",smooth_model_ext,".pdf"),   
+  figure_all
+   pdf(file = paste0("plots/figure_trt_perform_",smooth_model_ext,".pdf"),   
+       width = 7.5, 
+       height = 8.8) 
+   print(figure_all)
+   dev.off()
+  # 
+   tiff(file = paste0("plots/figure_trt_perform_",smooth_model_ext,".tiff"),   
+        width = 7.5, 
+        height = 8.8,
+        units = 'in',  
+        res = 300, 
+        compression = "lzw")
+   print(figure_all)
+   dev.off()
+  
+}
+
+
+
+########################################################
+# Piece together new scenario 4 for revision.
+########################################################
+
+
+for(smooth_model_type in c("random_walk", "exchangeable")){
+  #smooth_model_type <- "random_walk"
+  
+  if(smooth_model_type == "random_walk") smooth_model_ext <- "randwalk"
+  if(smooth_model_type == "exchangeable") smooth_model_ext <- "exch"
+  
+  setwd("C:/Users/LSHIT9/OneDrive - London School of Hygiene and Tropical Medicine/Documents/Survival extrapolation/Paper 1/Data/simsurvextrap_slurm_trt6/plots")
+  figure1 <- readRDS( paste0("figure2_",1,"_", smooth_model_ext ,".RDS"))
+  figure2 <- readRDS( paste0("figure2_",2,"_", smooth_model_ext ,".RDS"))
+  figure3 <- readRDS( paste0("figure2_",3,"_", smooth_model_ext ,".RDS"))
+  setwd("C:/Users/LSHIT9/OneDrive - London School of Hygiene and Tropical Medicine/Documents/Survival extrapolation/Paper 1/Data/simsurvextrap_trt3/plots")
+  figure4 <- readRDS( paste0("figure2_",4,"_", smooth_model_ext ,".RDS"))
+  figure4
+  
+  setwd(paste0(store_directory, "/figures"))
+  
+  figure_all <- plot_grid(NULL, figure1, NULL, figure2, NULL, figure3, NULL, figure4,
+                          rel_heights = c(0.01, 0.4,0.01,  0.4, 0.01, 0.4, 0.01, 0.4), 
+                          ncol = 1)
+  
+  
+  pdf(file = paste0("figure_trt_perform_",smooth_model_ext,".pdf"),   
       width = 7.5, 
-      height = 8) 
+      height = 8.8) 
   print(figure_all)
   dev.off()
-  
-  tiff(file = paste0(store_directory, "figures/figure_trt_perform_",smooth_model_ext,".tiff"),   
+  # 
+  tiff(file = paste0("figure_trt_perform_",smooth_model_ext,".tiff"),   
        width = 7.5, 
-       height = 8,
+       height = 8.8,
        units = 'in',  
-       res = 1200, 
+       res = 300, 
        compression = "lzw")
   print(figure_all)
   dev.off()
   
 }
+
+
+
+
+
+
