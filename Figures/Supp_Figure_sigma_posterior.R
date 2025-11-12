@@ -10,6 +10,7 @@ library(posterior)
 library(readr)
 library(purrr)
 library(forcats)
+library(ggtext)
 
 store_directory <- "C:/Users/LSHIT9/OneDrive - London School of Hygiene and Tropical Medicine/Documents/Survival extrapolation/Paper 1/Data/figures"
 
@@ -77,12 +78,12 @@ ggplot(aes(x=x, y = dist, colour = type)) +
 user <- Sys.info()["user"]
 store_directory <- "C:/Users/LSHIT9/OneDrive - London School of Hygiene and Tropical Medicine/Documents/Survival extrapolation/Paper 1/Data/"
 
-jobname <-  "cetux_sigma"
+jobname <-  "niv_sigma"
 
 setwd(paste0(store_directory , "simsurvextrap_", jobname, "/"))
 print(getwd())
 
-scenarios <- read_csv("scenarios_cetux_OS.csv")
+scenarios <- read_csv("scenarios_niv_PFS.csv")
 ## View(scenarios)
 
 scenarios <-  scenarios %>%
@@ -113,15 +114,19 @@ saveRDS(sigma_draws_all, "sigma_draws_all.rds")
 nsim <- 50
 
 for(i in scenarios$scenario_id){
-
+  #i <- 5
   for(j in 1:nsim){
-  
+  #j <- 1
   temp_dens <- density(sigma_draws_all %>%
-                         filter(isim == j) %>%
+                         filter(isim == j, scenario_id == i) %>%
                          pull(sigma), 
                        bw = 0.10)
   
-#  plot(temp_dens)
+  test_dens <- sigma_draws_all %>%
+    filter(isim == j, scenario_id == i)
+  
+  #summary(test_dens)
+  #  plot(temp_dens)
   
   temp_dens_df <- tibble(x = temp_dens$x, density = temp_dens$y) %>%
     mutate(scenario_id = i) %>%
@@ -226,10 +231,9 @@ sigma_df <- rbind(sigma_post_all,
                   sigma_prior_all)
 
 #summary(sigma_df)
-names(scenarios)
-summary(as.factor(scenarios$smooth_model))
-summary(scenarios$scenario_id)
-
+#names(scenarios)
+#summary(as.factor(scenarios$smooth_model))
+#summary(scenarios$scenario_id)
 
 for(smooth_model_type in c("random_walk", "exchangeable")){
   
@@ -272,28 +276,28 @@ for(smooth_model_type in c("random_walk", "exchangeable")){
           axis.title.x = element_text(size = 8),
           strip.text.x = element_text(size = 6),
           legend.box.margin =  margin(0, 0, 0,0),
-          legend.box.spacing = unit(0.2, "pt"),) +
+          legend.box.spacing = unit(0.2, "pt"),
+          legend.text = element_markdown(size = 10)) +
      geom_line()+
     scale_linewidth(NULL, range = c(0.4,1))+
     scale_alpha(range = c(0.1,1))+
-    scale_color_manual(NULL, values = c("#830051", "gray30"), 
-                       labels =  c(
-                         expression(bold(sigma) ~ "posterior"),
-                         expression(bold(sigma) ~ "prior")
+    scale_color_manual(NULL, values = c("#830051", "gray30"),
+                       labels = c(
+                         "<b>&sigma; posterior</b><br><span style='font-weight:400;'>(50 simulations)</span>",
+                         "<b>&sigma; prior</b>"
                        ))+
     facet_wrap(~label_df+label_hsd, ncol = 3, labeller = label_parsed)+
-    scale_x_continuous(NULL, limit = c(0,2.6)) + #, breaks = 1:20))+
-    scale_y_continuous("Density", limit = c(0,5))+
+    scale_x_continuous(NULL, limit = c(0,5.2), breaks = 1:5)+
+    scale_y_continuous("Density", limit = c(0,4.3), breaks = 1:4)+
     guides(linewidth = "none", alpha = "none")  +
-    guides(colour = guide_legend(override.aes = list(linewidth = c(0.7,1))))
-  #plot_prior_posterior
+    guides(colour = guide_legend(override.aes = list(linewidth = c(0.6,1))))
+ # plot_prior_posterior
  # assign(paste0("sigma_", smooth_model_ext), plot_prior_posterior)
   saveRDS(plot_prior_posterior, paste0("sigma_", smooth_model_ext, "_prior_posterior_figure.rds"))
 }
 
-
-store_dir_cetux <- paste0(store_directory , "simsurvextrap_", "cetux_sigma/")
-store_dir_niv <- paste0(store_directory , "simsurvextrap_", "niv_sigma/")
+store_dir_cetux <- paste0(store_directory , "simsurvextrap_cetux_sigma/")
+store_dir_niv <- paste0(store_directory , "simsurvextrap_niv_sigma/")
 
 #setwd()
 sigma_cetux_rw <- readRDS(paste0(store_dir_cetux, "sigma_randwalk_prior_posterior_figure.rds"))
@@ -305,13 +309,13 @@ sigma_niv_exch <- readRDS(paste0(store_dir_niv, "sigma_exch_prior_posterior_figu
 figure_all_rw <- plot_grid(
   sigma_cetux_rw  +
     theme(
-      plot.title = element_markdown(size = 12, face = "bold"),
+      plot.title = element_markdown(size = 10, face = "bold"),
       plot.title.position = "plot"
     ) +
     labs(title = "(a) Cetuximab OS, <b>&sigma;</b> prior and posterior"),
   sigma_niv_rw+ 
     theme(
-      plot.title = element_markdown(size = 12, face = "bold"),
+      plot.title = element_markdown(size = 10, face = "bold"),
       plot.title.position = "plot"
     ) +
     labs(title = "(b) Nivolumab PFS, <b>&sigma;</b> prior and posterior"), 
@@ -321,14 +325,14 @@ figure_all_rw <- plot_grid(
 figure_all_exch <- plot_grid(
   sigma_cetux_exch +
     theme(
-      plot.title = element_markdown(size = 12, face = "bold"),
+      plot.title = element_markdown(size = 10, face = "bold"),
       plot.title.position = "plot"
     ) +
     labs(title = "(a) Cetuximab OS, <b>&sigma;</b> prior and posterior"),
   
   sigma_niv_exch +
     theme(
-      plot.title = element_markdown(size = 12, face = "bold"),
+      plot.title = element_markdown(size = 10, face = "bold"),
       plot.title.position = "plot"
     ) +
     labs(title = "(b) Nivolumab PFS, <b>&sigma;</b> prior and posterior"),
