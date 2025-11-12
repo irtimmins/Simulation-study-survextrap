@@ -19,8 +19,8 @@ library(purrr)
 library(forcats)
 library(data.table)
 
-
 #######################################################
+
 store_directory <- "C:/Users/LSHIT9/OneDrive - London School of Hygiene and Tropical Medicine/Documents/Survival extrapolation/Paper 1/Data/"
 
 source("Functions/estimands.R")

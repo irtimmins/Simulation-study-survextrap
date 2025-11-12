@@ -302,35 +302,40 @@ sigma_cetux_exch <- readRDS(paste0(store_dir_cetux, "sigma_exch_prior_posterior_
 sigma_niv_exch <- readRDS(paste0(store_dir_niv, "sigma_exch_prior_posterior_figure.rds"))
 
 
-figure_all_rw <- plot_grid(sigma_cetux_rw  +
-                          theme(plot.title = element_text(
-                                                          size=10, 
-                                                          face="bold"),
-                                plot.title.position = "plot")+
-                          labs(title = expression("(a) Cetuximab OS, " * sigma ~ "prior and posterior")), 
-                        sigma_niv_rw+ 
-                          theme(plot.title = element_text(
-                                                          size=10, 
-                                                          face="bold"),
-                                plot.title.position = "plot")+
-                          labs(title = expression("(a) Nivolumab PFS, " * sigma ~ "prior and posterior")), 
-                        ncol = 1,
-                        align = "v")
+figure_all_rw <- plot_grid(
+  sigma_cetux_rw  +
+    theme(
+      plot.title = element_markdown(size = 12, face = "bold"),
+      plot.title.position = "plot"
+    ) +
+    labs(title = "(a) Cetuximab OS, <b>&sigma;</b> prior and posterior"),
+  sigma_niv_rw+ 
+    theme(
+      plot.title = element_markdown(size = 12, face = "bold"),
+      plot.title.position = "plot"
+    ) +
+    labs(title = "(b) Nivolumab PFS, <b>&sigma;</b> prior and posterior"), 
+  ncol = 1,
+  align = "v")
 
-figure_all_exch <- plot_grid(sigma_cetux_exch  +
-                             theme(plot.title = element_text(
-                               size=10, 
-                               face="bold"),
-                               plot.title.position = "plot")+
-                             labs(title = expression("(a) Cetuximab OS, " * sigma ~ "prior and posterior")), 
-                           sigma_niv_exch+ 
-                             theme(plot.title = element_text(
-                               size=10, 
-                               face="bold"),
-                               plot.title.position = "plot")+
-                             labs(title = expression("(a) Nivolumab PFS, " * sigma ~ "prior and posterior")), 
-                           ncol = 1,
-                           align = "v")
+figure_all_exch <- plot_grid(
+  sigma_cetux_exch +
+    theme(
+      plot.title = element_markdown(size = 12, face = "bold"),
+      plot.title.position = "plot"
+    ) +
+    labs(title = "(a) Cetuximab OS, <b>&sigma;</b> prior and posterior"),
+  
+  sigma_niv_exch +
+    theme(
+      plot.title = element_markdown(size = 12, face = "bold"),
+      plot.title.position = "plot"
+    ) +
+    labs(title = "(b) Nivolumab PFS, <b>&sigma;</b> prior and posterior"),
+  
+  ncol = 1,
+  align = "v"
+)
 
 
 tiff(file = paste0(store_directory, "figures/figure_sigma_priors_randwalk.tiff"),   
