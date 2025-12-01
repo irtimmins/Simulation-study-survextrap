@@ -179,7 +179,7 @@ for(smooth_model_type in c("random_walk", "exchangeable")){
   
   
   for(scenario_num in 1:4){
-    #scenario_num <- 1
+    #scenario_num <- 4
     
     plot_df <- scen_df %>%
       filter(hr_scenario == scenario_num | is.na(hr_scenario)) %>%
