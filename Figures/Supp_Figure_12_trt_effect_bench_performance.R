@@ -19,7 +19,7 @@ library(data.table)
 library(emg)
 library(rstpm2)
 
-jobname <- "trt5_rw" 
+jobname <- "cetux_trt3"
 
 user <- Sys.info()["user"]
 store_directory <- "C:/Users/LSHIT9/OneDrive - London School of Hygiene and Tropical Medicine/Documents/Survival extrapolation/Paper 1/Data/"
@@ -28,14 +28,12 @@ source("Functions/estimands.R")
 source("Functions/performance.R")
 
 user <- Sys.info()["user"]
-store_res <- paste0(store_directory, "simsurvextrap_slurm_", jobname, "/") 
+store_res <- paste0(store_directory, "simsurvextrap_trt3/") 
 setwd(store_res)
 
 #####################################################
 
-setwd(paste0(store_directory , "simsurvextrap_slurm_", jobname, "/"))
-
-scenarios_flex <- expand_grid(dgm = 1:3,
+scenarios_flex <- expand_grid(dgm = 1:4,
                               k_knots = c(0,1,2,4,8)) %>%
   mutate(flex_scenario_id = row_number()) %>%
   relocate(flex_scenario_id) %>%
@@ -45,7 +43,7 @@ scenarios_flex <- expand_grid(dgm = 1:3,
   select(dgm, df, df_tvc, new_id)
 
 #head(scenarios_flex)
-scenarios_rstpm <- expand_grid(dgm = 1:3,
+scenarios_rstpm <- expand_grid(dgm = 1:4,
                                df_base = c(1,2,3,5,9),
                                df_tvc = c(1,2,3,5,9)) %>%
   mutate(rstpm2_scenario_id = row_number()) %>%
@@ -68,7 +66,6 @@ scen_df <- rbind(scenarios_flex %>%  mutate(model = "flexsurv"),
 ################################################################
 # Read in res files.
 ################################################################
-
 
 for(i in 1:nrow(scenarios_flex)){
  # i<- 1
@@ -141,11 +138,12 @@ all_res <-
 
 label_vec <- c("(a) Scenario 1: Constant effect (proportional hazards)",
                "(b) Scenario 2: Waning effect", 
-               "(c) Scenario 3: Delayed then waning effect")
+               "(c) Scenario 3: Delayed then waning effect",
+               "(d) Scenario 4: Crossing survival curves")
 
 
-
-for(scenario_num in 1:3){
+  
+for(scenario_num in 1:4){
   #scenario_num <- 1
   #head(scen_df)
   
@@ -238,7 +236,8 @@ for(scenario_num in 1:3){
   xbreaks2 <- seq(from = 0.40, to = 0.55, by = 0.05)
   xlim3 <- c(0.36, 0.60)
   xbreaks3 <- seq(from = 0.40, to = 0.55, by = 0.05)
-  
+  xlim4 <- c(-0.09, 0.15)
+  xbreaks4 <- seq(from = -0.05, to = 0.10, by = 0.05)
   
   plot2 <- plot_df2 %>%
     filter(!is.na(estimand_mean)) %>%
@@ -463,13 +462,13 @@ figure_all <- plot_grid(NULL, figure1, NULL, figure2, NULL, figure3,
                         ncol = 1)
 figure_all
 
-pdf(file = paste0(store_directory, "figures/figure_trt_bench_perform.pdf"),   
+pdf(file = paste0(store_directory, "figures/figure_trt_bench_perform_scen1_3.pdf"),   
     width = 8.5, 
     height = 12) 
 figure_all
 dev.off()
 
-tiff(file = paste0(store_directory, "figures/figure_trt_bench_perform.tiff"),   
+tiff(file = paste0(store_directory, "figures/figure_trt_bench_perform_scen1_3.tiff"),   
      width = 8.5, 
      height = 12,
      units = 'in',  
@@ -477,5 +476,22 @@ tiff(file = paste0(store_directory, "figures/figure_trt_bench_perform.tiff"),
      compression = "lzw")
 
 figure_all
+dev.off()
+
+########################################################
+
+pdf(file = paste0(store_directory, "figures/figure_trt_bench_perform_scen4.pdf"),   
+    width = 8.5, 
+    height = 4) 
+figure4
+dev.off()
+
+tiff(file = paste0(store_directory, "figures/figure_trt_bench_perform_scen4.tiff"),   
+     width = 8.5, 
+     height = 4,
+     units = 'in',  
+     res = 1200, 
+     compression = "lzw")
+figure4
 dev.off()
 
