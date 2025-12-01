@@ -133,11 +133,14 @@ write_delim(table_df, paste0(store_directory, "tables/single_arm_runtime.csv"), 
 #######################################
 
 
-trt_jobname <-   "trt8_time"
+store_directory <- "C:/Users/LSHIT9/OneDrive - London School of Hygiene and Tropical Medicine/Documents/Survival extrapolation/Paper 1/Data/"
 
+trt_jobname <-   "cetux_trt6"
+
+jobname <- "cetux_trt6"
+store_res <- paste0(store_directory, "simsurvextrap_trt6/") 
+setwd(store_res)
 #jobname <- cetux_jobname
-
-
 #jobname <-  "niv9_time" 
 #niv_jobname <- "niv9_time" 
 #jobname <- "master_niv3" 
@@ -159,7 +162,7 @@ nscen <- nrow(scenarios)
 ###################################################
 
 for(i in scenarios$scenario_id){
-  
+  #i <- 1
   for(j in 1:50){ 
     #i <- j <- 1
     temp <- readRDS(paste0("scen", i ,"/", "est",j, ".rds"))
@@ -225,7 +228,7 @@ table_trt_df$time <- as.numeric(table_trt_df$time)
 table_trt_df$time[table_trt_df$stan_fit_method == "opt"] <-   sprintf("%.2f", round(table_trt_df$time[table_trt_df$stan_fit_method == "opt"] , 2))
 table_trt_df
 
-write_delim(table_trt_df, paste0(store_directory, "tables/two_arm_runtime.csv"), delim = ",")
+write_delim(table_trt_df, paste0(store_directory, "tables/two_arm_runtime2.csv"), delim = ",")
 
 #############################
 

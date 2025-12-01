@@ -236,8 +236,8 @@ for(scenario_num in 1:4){
   xbreaks2 <- seq(from = 0.40, to = 0.55, by = 0.05)
   xlim3 <- c(0.36, 0.60)
   xbreaks3 <- seq(from = 0.40, to = 0.55, by = 0.05)
-  xlim4 <- c(-0.09, 0.15)
-  xbreaks4 <- seq(from = -0.05, to = 0.10, by = 0.05)
+  xlim4 <- c(-0.14, 0.10)
+  xbreaks4 <- seq(from = -0.10, to = 0.05, by = 0.05)
   
   plot2 <- plot_df2 %>%
     filter(!is.na(estimand_mean)) %>%
