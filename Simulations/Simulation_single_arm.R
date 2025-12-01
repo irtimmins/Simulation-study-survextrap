@@ -20,6 +20,9 @@ library(forcats)
 # specify jobname and path where results are to be stored.
 #############################################################
 
+#setwd("C:/Users/LSHIT9/OneDrive - London School of Hygiene and Tropical Medicine/Documents/Survival extrapolation/Paper 1/Code/Simulation-study-survextrap")
+#setwd("C:/Users/LSHIT9/OneDrive - London School of Hygiene and Tropical Medicine/Documents/Survival extrapolation/Paper 1/Data/simsurvextrap_cetux_short1/")
+
 jobname <- "cetux_OS" # or "niv_PFS" 
 store_res <- "directory/to/store/simulations"
 
@@ -169,6 +172,19 @@ for(i in 1:ndgm){
                                        nsim = nsim, 
                                        maxT = scenarios_dgm$maxT[i],
                                        seed = scenarios_dgm$dgm_seed[i]) )
+  
+}
+
+
+# Save one iteration for prior distribution plots.
+
+if(jobname == "cetux_OS"){
+  
+  surv_df <- sim_data1 %>%
+    filter(i == 1) %>%
+    as_tibble()
+  
+  saveRDS(surv_df, "Data/cetuximab_OS_simulated_example.rds")
   
 }
 
