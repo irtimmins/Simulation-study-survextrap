@@ -28,7 +28,7 @@ library(emg)
 
 # Folder where figures will be stored.
 #store_directory <- "/home/lshit9/survival_extrapolation/simulation1/figures"
-store_directory <- "C:/Users/LSHIT9/OneDrive - London School of Hygiene and Tropical Medicine/Documents/Survival extrapolation/Paper 1/Data/simsurvextrap_trt2"
+store_directory <- "C:/Users/LSHIT9/OneDrive - London School of Hygiene and Tropical Medicine/Documents/Survival extrapolation/Paper 1/Data/simsurvextrap_trt3"
 store_res <- "C:/Users/LSHIT9/OneDrive - London School of Hygiene and Tropical Medicine/Documents/Survival extrapolation/Paper 1/Data/figures"
 
 
@@ -105,7 +105,7 @@ plot_hr <- hr_df %>%
   geom_line(col = "#830051")+
   ylab("Hazard ratio")+
   scale_y_log10(lim = c(0.42,2.14), 
-                breaks = c(0.50, 0.75, 1.00, 1.50, 2.00))+
+                breaks = c(0.50, 1.00, 2.00))+
   scale_x_continuous("Time (years)", lim = c(0, 5), 
                      breaks = 0:5)+
   scale_colour_discrete(name = NULL)
